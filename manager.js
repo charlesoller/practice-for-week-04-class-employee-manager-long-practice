@@ -121,6 +121,45 @@ const Employee = require('./employee');
 // refactor your code so that when you instantiate an `Employee`, they will add
 // themselves to their `Manager`'s `employees` list.
 
+
+
+// To calculate a `Manager`'s bonus you must sum the salaries of each `employee`
+// in their `employees` array. You must also take into account whether each
+// `employee` is an instance of an `Employee`, in which case simply add their
+// `salary` to a sum. If they are a `Manager` you must then process each of their
+// employees, and so on.
+
+// The the repetitive nature of this problem suggests that a recursive solution
+// might be appropriate. You should extract this logic into a helper function
+// named `_totalSubSalary()`. The `_` ahead of the method name is an indication
+// to other developers that this method is "private" and should only
+// be used as a helper.
+
+// Inside of `_totalSubSalary()`, create a sum variable. Check to see if each
+// `employee` is an instance of `Manager`. If so, add their `salary` plus a
+// recursive call to their `_totalSubSalary()` to sum. If not, simply add
+// their `salary` to sum.
+
+// The `calculateBonus` logic should look something like this:
+
+// ```plaintext
+// bonus = (manager's salary + total salary of all employees under them)
+//  * multiplier
+// ```
+function _totalSubSalary(employee){
+    let sum = 0;
+    if(employee instanceof Manager){
+        sum += employee.salary;
+        employee.employees.forEach(subEmployee => {
+            sum += _totalSubSalary(subEmployee);
+        })
+    } else {
+        sum += employee.salary;
+    }
+
+    return sum;
+}
+
 class Manager extends Employee{
     constructor(name, salary, title, manager=null, employees=[]){
         super(name, salary, title, manager);
@@ -130,21 +169,35 @@ class Manager extends Employee{
     addEmployee(employee){
         this.employees.push(employee);
     }
+
+    calculateBonus(multipler){
+        let bonus = this.salary;
+        bonus += this._totalSubSalary()
+        return bonus * multipler
+    }
+
+    _totalSubSalary(){
+        let sum = 0;
+        this.employees.forEach(employee => {
+            if(employee instanceof Manager){
+                sum += employee.salary;
+                sum += employee._totalSubSalary(employee.employees)
+            } else {
+                sum += employee.salary;
+            }
+        })
+        return sum;
+    }
 }
 
-// const splinter = new Manager('Splinter', 100000, 'Sensai');
-// console.log('Before: ', splinter);
+const splinter = new Manager('Splinter', 100000, 'Sensei');
+const leo = new Manager('Leonardo', 90000, 'Ninja', splinter);
+const raph = new Manager('Raphael', 90000, 'Ninja', leo);
+const mikey = new Employee('Michelangelo', 85000, 'Grasshopper', raph);
+const donnie = new Employee('Donatello', 85000, 'Grasshopper', raph);
 
-// const leo = new Employee('Leonardo', 90000, 'Ninja', splinter);
-// const mikey = new Employee('Michelangelo', 90000, 'Ninja', splinter);
-// const donnie = new Employee('Donatello', 90000, 'Ninja', splinter);
-// const raph = new Employee('Raphael', 90000, 'Ninja', splinter);
-
-// splinter.addEmployee(leo);
-// splinter.addEmployee(mikey);
-// splinter.addEmployee(donnie);
-// splinter.addEmployee(raph);
-
-// console.log('After: ', splinter);
+console.log(splinter.calculateBonus(0.05)); // => 22500
+console.log(leo.calculateBonus(0.05)); // => 17500
+console.log(raph.calculateBonus(0.05)); // => 13000
 
 module.exports = Manager;
