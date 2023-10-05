@@ -147,4 +147,4 @@ class Manager extends Employee{
 
 // console.log('After: ', splinter);
 
-// module.exports = Manager;
+module.exports = Manager;
